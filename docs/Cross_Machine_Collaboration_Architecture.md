@@ -11,7 +11,7 @@
 
 本指南旨在說明跨主機、跨帳號多代理人 (Multi-Agent) 協作的技術實現路徑與安全控制框架。內容分為兩個層級：
 1. **單人現狀與輕量優化**：針對單機環境的最小權限與安全邊界實作。
-2. **未來可擴展藍圖**：符合 2026 最新 MCP 規格、A2A 協定、OWASP Agentic Top 10 與 OAuth 2.1 的生產級擴展架構。
+2. **未來可擴展藍圖**：參照 2026 最新 MCP 規格草案、A2A 協定、OWASP Agentic Top 10 與 OAuth 2.1 的生產級擴展架構。
 
 ---
 
@@ -44,8 +44,8 @@
 |                       跨端協作三大技術實現路徑                              |
 +------------------------------------+-------------------------------------+
 | 1. Remote MCP                      | 2. 受控遠端執行 (Controlled Exec)    |
-|    - 協定: MCP Streamable HTTP      |    - 技術: SSH + JIT / Short-lived   |
-|    - 版本: 2026-07-28 / Legacy SSE  |    - 用途: 受控維運與指令腳本執行    |
+|    - 協定: 參照 MCP Streamable HTTP |    - 技術: SSH + JIT / Short-lived   |
+|    - 版本: 2026-07-28 草案        |    - 用途: 受控維運與指令腳本執行    |
 +------------------------------------+-------------------------------------+
 | 3. 非同步任務中繼 (Async Task Relay)                                        |
 |    - 技術: NATS / GitHub Issues / Slack Webhook                          |
@@ -54,7 +54,7 @@
 ```
 
 1. **Remote MCP (開放協定層)**：
-   - **通訊標準**：採用 `Transport: Streamable HTTP`（MCP Version 2026-07-28），僅在必要時向下相容 Legacy SSE。
+   - **通訊標準**：參照 `Transport: Streamable HTTP`（MCP Version 2026-07-28 草案），僅在必要時向下相容 Legacy SSE。
    - **應用場景**：提供跨主機的標準化遠端 Tool / Resource 呼叫介面。
 
 2. **受控遠端執行 (Controlled Remote Execution)**：
@@ -64,8 +64,8 @@
 3. **非同步任務中繼與 A2A 規格藍圖 (Async Message Relay & A2A)**：
    - **中繼媒介**：採用 Message Broker (如 NATS) 或 GitHub Issues / Webhook 進行防火牆隔離下的非同步溝通。
    - **A2A v1 擴展藍圖**：將來擴展標準 Agent-to-Agent 協定時，需實作：
-     - **Agent Card**：能力與介面宣告機制。
-     - **Task / Message 模型**：標準化 JSON-RPC / HTTP+JSON Binding。
+     - **Agent Card & 簽章**：能力介面宣告與 JWS / JSON Canonicalization 標準簽章。
+     - **Task / Message 模型**：標準化 JSON-RPC / HTTP+JSON Binding 與 gRPC Binding。
      - **Webhook 驗證**：HTTPS、真實性簽名驗證、冪等處理 (Idempotency) 與限流。
 
 ---
@@ -73,26 +73,27 @@
 ### 2. 身份授權與資安風控擴展藍圖 (Security Roadmap)
 
 #### 🅰️ 完整 OAuth 2.1 / OIDC 授權探索藍圖
-未來從單人權限擴展至多租戶/跨帳號時，禁止單純傳遞硬編碼 Bearer Token，應建立符合 MCP 2026 規格的授權架構：
+未來從單人權限擴展至多租戶/跨帳號時，禁止單純傳遞硬編碼 Bearer Token，應建立符合 MCP 2026 規格草案的授權架構：
 * **Protected Resource Metadata & OIDC Discovery**：自動探索授權伺服器端點。
 * **Issuer & Audience 綁定**：防範 Token Passthrough 與冒用攻擊。
 * **Scope 最小化與動態輪替**：每個代理人/租戶具備獨立 Workload Identity，Token 設定短過期時間與自動輪替。
 
 #### 🅱️ OWASP Agentic Applications Top 10 全方位防護藍圖
 針對多代理人系統常見的威脅模型，未來將實施以下護欄 (Guardrails)：
-* **Prompt Injection / 間接指令注入**：將外部輸入與指令明確用 XML 標籤隔離，並於輸入端進行語義安全過濾。
+* **Prompt Injection / 間接指令注入**：將外部輸入與指令明確用 XML 標籤隔離、標記內容信任等級、實施 Data Taint Tracking 與操作前政策引擎。
 * **Confused Deputy & Token Passthrough 護欄**：不允許代理人盲目轉發上遊權限，每層呼叫皆重新驗證 Scope。
 * **SSRF 與 Tool Poisoning 防禦**：MCP 伺服器出口預設拒絕，限制可存取之 IP/網域白名單；工具註冊需經簽名驗證。
 * **Log 去密化 (Secret Redaction)**：所有日誌落盤前強制過濾 Auth Header、Token、連線密碼與敏感資料。
 
 ---
 
-### 3. 分散式任務可靠性語意 (Reliability & Distributed Task)
+### 3. 本系統統一 Task Envelope (Internal Contract)
 
-跨主機系統未來將支援標準 Task Envelope 結構：
+跨主機系統未來將支援內部 Task Envelope 結構：
 
 ```json
 {
+  "schema_version": "1.0",
   "task_id": "uuid-v4",
   "parent_task_id": "uuid-v4-or-null",
   "trace_id": "uuid-v4",

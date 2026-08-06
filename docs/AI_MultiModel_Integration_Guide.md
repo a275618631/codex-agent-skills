@@ -9,7 +9,7 @@
 ## 概述
 
 本指南說明將 Gemini 引擎 (Antigravity CLI)、OpenAI/Claude 體系 (Codex CLI) 與本機 LLM (Ollama) 透過 Agent Bridge 與 MCP 進行多模型協同的技術實作。本檔分為：
-1. **單人現狀架構與輕量優化**：單機環境實作細節與資源控制。
+1. **單人現狀架構與輕量優化**：單機環境實作細節、資源控制與實體驗證矩陣 (Evidence Matrix)。
 2. **未來可擴展藍圖**：包含有界 DAG 協作、分散式 Task Envelope、OS 層沙盒與 OpenTelemetry 觀測語意。
 
 ---
@@ -23,14 +23,14 @@
 | 代理人角色 | 引擎／載體 | 現狀實作職責 | 通訊介面與 MCP 套件 |
 | :--- | :--- | :--- | :--- |
 | **Antigravity (主控/長脈絡)** | Gemini 3.6 Flash | 架構規劃、長脈絡歷史檢索、主對話介面。 | MCP Client (`mcp_config.json`) |
-| **Codex (重構/二審 Worker)** | OpenAI / Custom Adapter | 複雜代碼重構、獨立二審審查。 | `codex mcp-server` & `agent-bridge` |
-| **Ollama (本機免費推論)** | Qwen3:8b (Q4_K_M) | 本機離線推導、敏感資料處理、0 雲端 API 帳單。 | `@rawveg/ollama-mcp` (Port 11434) |
+| **Codex (重構/二審 Worker)** | OpenAI / Custom Adapter | 複雜代碼重構、獨立二審審查。 | `codex mcp-server` (Experimental) & `agent-bridge` |
+| **Ollama (本機免費推論)** | Qwen3:8b (Q4_K_M) | 本機離線推導、敏感資料處理、0 雲端 API 帳單。 | `@rawveg/ollama-mcp@1.0.9` (`OLLAMA_HOST: http://127.0.0.1:11434`) |
 
-*說明：Codex 原生為 OpenAI 代理環境。若介接 Claude 模型，實務上屬 Custom OpenAI-compatible provider adapter。*
+*說明：Codex 官方將 `codex mcp-server` 標示為 Experimental 介面；若介接 Claude 模型，實務上屬 Custom OpenAI-compatible provider adapter。*
 
 ---
 
-### 2. 雙重執行授權模式
+### 2. 雙重執行授權模式與安全矩陣
 
 * **唯讀二審模式 (Consult Mode)**：
   - 於獨立暫存區（例如 `%TEMP%\agent-bridge-agy-...`）啟動子行程。
@@ -41,14 +41,16 @@
 
 ---
 
-### 3. 單人用輕量優化建議 (保持簡單，預留擴充)
+### 3. 本機實體驗證矩陣 (Evidence Matrix)
 
-1. **分層資源與逾時控制 (Resource & Timeout Layering)**：
-   - 設定硬性 600 秒 (10 分鐘) 工具呼叫上限，並於超時時強制進行 Windows 進程樹清理 (`kill_process_tree`)，防止背景殭屍行程。
-2. **主動狀態呈報 (No Silent Waiting)**：
-   - 跨模型工具呼叫發起時，第一時間向使用者輸出文字狀態報告，提升執行透明度。
-3. **Log 動態資安遮蔽 (Secret Redaction Filter)**：
-   - 獨立日誌檔 `agent-bridge-debug.log` 預設過濾 `Bearer Token`、`github_pat_*`、`password` 與連線密碼，防止 Console 雜訊與敏感資料洩漏。
+本機套件已有獨立單元測試證明實作有效性：
+
+| 宣稱機制 | 實作程式碼檔案 | 測試腳本與命令 | 實測狀態 (Evidence Status) |
+| :--- | :--- | :--- | :--- |
+| **Windows 進程樹清理** | [cli.py](file:///C:/Users/Y6T2/.codex/mcp/agent-bridge/src/agent_bridge/cli.py#L86-L92) | `python -m unittest test_cli.py` | ✅ 已測試驗證 (`Ran 5 tests OK`) |
+| **Log 資安動態遮蔽** | [cli.py](file:///C:/Users/Y6T2/.codex/mcp/agent-bridge/src/agent_bridge/cli.py#L71-L82) | `test_command_redacts_prompt` | ✅ 已測試驗證 (`Ran 5 tests OK`) |
+| **排他鎖與 PID 破鎖** | [lock.py](file:///C:/Users/Y6T2/.codex/mcp/agent-bridge/src/agent_bridge/lock.py) | `test_global_lock_is_exclusive` | ✅ 已測試驗證 (`Ran 5 tests OK`) |
+| **Ollama 本地預檢** | [server.py](file:///C:/Users/Y6T2/.codex/mcp/agent-bridge/src/agent_bridge/server.py#L13-L20) | `check_ollama_health()` HTTP 3s GET | ✅ 實測通暢 (`status 200`) |
 
 ---
 
@@ -76,13 +78,14 @@
 
 ---
 
-### 3. 分散式 Task Envelope 與可觀測性標準 (Task Envelope & OTel)
+### 3. 本系統統一 Task Envelope 與 OpenTelemetry 觀測藍圖
 
-#### 🅰️ 統一 Task Envelope 結構
-未來跨 Agent 任務將統一採用以下 JSON Envelope 進行通訊：
+#### 🅰️ 內部 Task Envelope 結構 (Internal Contract)
+本系統跨 Agent 任務統一採用以下 JSON Envelope 進行通訊：
 
 ```json
 {
+  "schema_version": "1.0",
   "task_id": "uuid-v4",
   "parent_task_id": "uuid-v4-or-null",
   "trace_id": "uuid-v4",
@@ -91,14 +94,12 @@
   "requested_scopes": ["repo:read"],
   "deadline": "RFC3339-timestamp",
   "max_tool_calls": 20,
-  "max_cost": 1.0,
-  "input_artifacts": [],
   "approval_required": true
 }
 ```
 
 #### 🅱️ OpenTelemetry (OTel) 語意觀測藍圖
-符合 OpenTelemetry GenAI 語意規範，提供生產級可觀測性：
+參照並鎖定指定版本的 OpenTelemetry GenAI Semantic Conventions：
 * **Traces**：記錄每一步 MCP Tool Invocations、Span 時間與 Agent 轉換節點。
 * **Metrics**：追蹤 Tool Call 成功率、Latency 延遲分佈與 Token 消耗量。
 * **Logs**：採用結構化 JSON Log，並實施強效 Secret Redaction 預防資安外洩。
@@ -108,6 +109,7 @@
 ### 4. 離線推論與 OAuth 憑證邊界釐清
 
 * **Ollama 本地推論邊界**：
+  - 鎖定版本 `@rawveg/ollama-mcp@1.0.9`，配置 `OLLAMA_HOST: http://127.0.0.1:11434`。
   - 本機執行可避免雲端模型 API 帳單，但仍有本機電力與硬體運算成本。
   - 僅在停用遙測、限制網路出口、工具純本地化時，達到極致的離線隱私保護。
 * **Codex 認證安全規範**：
