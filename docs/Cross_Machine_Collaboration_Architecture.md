@@ -1,7 +1,7 @@
 # 跨機器／跨帳號協作架構與風控拓展指南 (單機現狀與未來擴展藍圖)
 
 > **文件狀態 (Metadata)**:  
-> `status`: Proposal & Single-User PoC  
+> `status`: Proposal & Single-User PoC Architecture  
 > `execution_allowed`: False (未經人工確認嚴禁自主執行)  
 > `requires_human_approval`: True  
 
@@ -20,7 +20,7 @@
 在單人單機開發環境中，核心原則是「在不增加無謂複雜度的前提下，確保極致的安全邊界與穩定性」。
 
 ### 1. 現有實作模式
-* **權限隔離**：預設採用唯讀模式，敏感操作（寫入、刪除、部署、Git Push）需人工確認。
+* **權限隔離**：預設採用唯讀模式，敏感操作（寫入、刪除、部署、Git Push）需人工授權。
 * **狀態分離**：禁止跨端傳遞私鑰、Token、Cookie、瀏覽器 Profile 或 `.env` 檔案；僅移植平台無關的 Skill、SOP 與 Prompt。
 * **子行程與鎖保護**：使用本機 Cross-process PID 生存檢查與安全排他鎖，防止死鎖與競爭條件。
 
@@ -83,7 +83,7 @@
 * **Prompt Injection / 間接指令注入**：將外部輸入與指令明確用 XML 標籤隔離，並於輸入端進行語義安全過濾。
 * **Confused Deputy & Token Passthrough 護欄**：不允許代理人盲目轉發上遊權限，每層呼叫皆重新驗證 Scope。
 * **SSRF 與 Tool Poisoning 防禦**：MCP 伺服器出口預設拒絕，限制可存取之 IP/網域白名單；工具註冊需經簽名驗證。
-* **Log 去密化 (Secret Redaction)**：所有日誌落盤前強制過濾 Auth Header、Token、連線字串與敏感資料。
+* **Log 去密化 (Secret Redaction)**：所有日誌落盤前強制過濾 Auth Header、Token、連線密碼與敏感資料。
 
 ---
 

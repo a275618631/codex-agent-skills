@@ -26,7 +26,7 @@
 | **Codex (重構/二審 Worker)** | OpenAI / Custom Adapter | 複雜代碼重構、獨立二審審查。 | `codex mcp-server` & `agent-bridge` |
 | **Ollama (本機免費推論)** | Qwen3:8b (Q4_K_M) | 本機離線推導、敏感資料處理、0 雲端 API 帳單。 | `@rawveg/ollama-mcp` (Port 11434) |
 
-*說明：Codex 原生為 OpenAI 代理環境。若介接 Claude 模型，實務上屬於 Custom OpenAI-compatible provider adapter。*
+*說明：Codex 原生為 OpenAI 代理環境。若介接 Claude 模型，實務上屬 Custom OpenAI-compatible provider adapter。*
 
 ---
 
@@ -44,11 +44,11 @@
 ### 3. 單人用輕量優化建議 (保持簡單，預留擴充)
 
 1. **分層資源與逾時控制 (Resource & Timeout Layering)**：
-   - 設定硬性 600 秒 (10 分鐘) 工具呼叫上限，並於超時時強制中斷子行程樹 (`process tree cleanup`)，防止背景殭屍行程。
+   - 設定硬性 600 秒 (10 分鐘) 工具呼叫上限，並於超時時強制進行 Windows 進程樹清理 (`kill_process_tree`)，防止背景殭屍行程。
 2. **主動狀態呈報 (No Silent Waiting)**：
    - 跨模型工具呼叫發起時，第一時間向使用者輸出文字狀態報告，提升執行透明度。
-3. **Log 去密化與安全隔離 (Secret Redaction)**：
-   - 獨立日誌檔 `agent-bridge-debug.log` 預設過濾 Auth Header、Token 與連線密碼，防止 Console 雜訊污染 MCP STDIO 傳輸管道。
+3. **Log 動態資安遮蔽 (Secret Redaction Filter)**：
+   - 獨立日誌檔 `agent-bridge-debug.log` 預設過濾 `Bearer Token`、`github_pat_*`、`password` 與連線密碼，防止 Console 雜訊與敏感資料洩漏。
 
 ---
 
