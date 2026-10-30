@@ -21,7 +21,7 @@
 
 ### 1. 現有實作模式
 * **權限隔離**：預設採用唯讀模式，敏感操作（寫入、刪除、部署、Git Push）需人工授權。
-* **狀態分離**：禁止跨端傳遞私鑰、Token、Cookie、瀏覽器 Profile 或 `.env` 檔案；僅移植平台無關的 Skill、SOP 與 Prompt。
+* **狀態分離**：禁止跨端傳遞私鑰、Token、Cookie、瀏覽器 Profile 或 `環境變數設定檔` 檔案；僅移植平台無關的 Skill、SOP 與 Prompt。
 * **子行程與鎖保護**：使用本機 Cross-process PID 生存檢查與安全排他鎖，防止死鎖與競爭條件。
 * **環境變數安全白名單**：實施嚴格的環境變數白名單過濾，子行程僅繼承必要的系統環境變數與 PATH，杜絕父行程之 `GITHUB_PERSONAL_ACCESS_TOKEN` 或其他敏感 Token 外洩。
 
