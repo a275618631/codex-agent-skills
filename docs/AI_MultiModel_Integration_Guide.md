@@ -47,11 +47,11 @@
 
 | 宣稱機制 | 實作程式碼檔案 | 測試腳本與命令 | 實測狀態 (Evidence Status) |
 | :--- | :--- | :--- | :--- |
-| **Windows 進程樹清理** | [cli.py](file:///C:/Users/Y6T2/.codex/mcp/agent-bridge/src/agent_bridge/cli.py#L90-L96) | `python -m unittest test_cli.py` | ✅ 已測試驗證 (`Ran 6 tests OK`) |
-| **Log 資安動態遮蔽** | [cli.py](file:///C:/Users/Y6T2/.codex/mcp/agent-bridge/src/agent_bridge/cli.py#L74-L88) | `test_command_redacts_prompt` | ✅ 已測試驗證 (`Ran 6 tests OK`) |
-| **排他鎖與 PID 破鎖** | [lock.py](file:///C:/Users/Y6T2/.codex/mcp/agent-bridge/src/agent_bridge/lock.py) | `test_global_lock_is_exclusive` | ✅ 已測試驗證 (`Ran 6 tests OK`) |
-| **Ollama 本地預檢** | [server.py](file:///C:/Users/Y6T2/.codex/mcp/agent-bridge/src/agent_bridge/server.py#L16-L23) | 整合至 `health_check` MCP 工具實測 | ✅ 已串接至 health_check 工具通過測試 |
-| **環境變數安全白名單** | [cli.py](file:///C:/Users/Y6T2/.codex/mcp/agent-bridge/src/agent_bridge/cli.py#L143-L157) | `test_cli_env_filtering` | ✅ 已實施白名單過濾並通過測試 |
+| **Windows 進程樹清理** | [cli.py](file://<CODEX_DIR>/mcp/agent-bridge/src/agent_bridge/cli.py#L90-L96) | `python -m unittest test_cli.py` | ✅ 已測試驗證 (`Ran 6 tests OK`) |
+| **Log 資安動態遮蔽** | [cli.py](file://<CODEX_DIR>/mcp/agent-bridge/src/agent_bridge/cli.py#L74-L88) | `test_command_redacts_prompt` | ✅ 已測試驗證 (`Ran 6 tests OK`) |
+| **排他鎖與 PID 破鎖** | [lock.py](file://<CODEX_DIR>/mcp/agent-bridge/src/agent_bridge/lock.py) | `test_global_lock_is_exclusive` | ✅ 已測試驗證 (`Ran 6 tests OK`) |
+| **Ollama 本地預檢** | [server.py](file://<CODEX_DIR>/mcp/agent-bridge/src/agent_bridge/server.py#L16-L23) | 整合至 `health_check` MCP 工具實測 | ✅ 已串接至 health_check 工具通過測試 |
+| **環境變數安全白名單** | [cli.py](file://<CODEX_DIR>/mcp/agent-bridge/src/agent_bridge/cli.py#L143-L157) | `test_cli_env_filtering` | ✅ 已實施白名單過濾並通過測試 |
 
 ---
 
@@ -114,4 +114,4 @@
   - 本機執行可避免雲端模型 API 帳單，但仍有本機電力與硬體運算成本。
   - 僅在停用遙測、限制網路出口、工具純本地化時，達到極致的離線隱私保護。
 * **Codex 認證安全規範**：
-  - Bridge 透過正式的 CLI 處理與呼叫，**嚴禁 Bridge 程式碼直接解析、讀取或搬移**本機 `~/.codex/auth.json` 或 OS Credential Store 中的 OAuth Token，確保憑證邊界安全。
+  - Bridge 透過正式的 CLI 處理與呼叫，**嚴禁 Bridge 程式碼直接解析、讀取或搬移**本機 `~/.codex/auth-config` 或 OS Credential Store 中的 OAuth Token，確保憑證邊界安全。
