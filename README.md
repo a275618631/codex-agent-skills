@@ -1,72 +1,56 @@
-# Codex Agent Skills
+# Codex Agent Skills｜讓常用工程流程可以重複使用
 
-Reusable, safety-first skills for reliable agent work.
+排查問題、審查程式碼、規劃自動化與交付成果，看似是不同工作，其實常常有同樣的要求：先確認條件、知道哪些操作要核准、留下測試結果，並讓下一個接手的人看得懂。
 
-可重複使用、以安全為優先的 Agent Skills，協助代理人穩定完成分析、交付、自動化與審查工作。
+我把這些工作整理成五個可攜式 Agent Skills。每個 Skill 都是一份可以直接閱讀、調整與放進相容 Agent 環境的工作方法；不用另外架設一套 Agent Framework。
 
 [![Validate](https://github.com/a275618631/codex-agent-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/a275618631/codex-agent-skills/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Why this collection? / 為什麼是這套？
+## 五個 Skills
 
-These skills turn common agent habits into explicit, reusable operating contracts:
-
-- diagnose before repairing;
-- keep risky actions behind approval gates;
-- separate development context from target-user context;
-- make outputs, evidence, and follow-up work explicit;
-- stop safely when assumptions or validation fail.
-
-這套技能把常見的 Agent 工作習慣整理成可重複使用的執行契約：先診斷再修復、敏感操作需要核准、開發環境與目標環境分離、交付必須帶證據，驗證失敗時安全停止。
-
-## Skills / 技能目錄
-
-| Skill | Best for / 適用情境 |
+| Skill | 什麼時候使用 |
 | --- | --- |
-| [`preventive-repair`](skills/preventive-repair/SKILL.md) | Resilience, failure prevention, recovery boundaries / 預防性防護、失效隔離與復原邊界 |
-| [`portable-tool-delivery`](skills/portable-tool-delivery/SKILL.md) | Cross-machine tools and non-engineer handoff / 跨電腦工具與非工程使用者交付 |
-| [`workflow-automation-agent`](skills/workflow-automation-agent/SKILL.md) | Safe automation with approvals and auditability / 具核准與稽核能力的自動化 |
-| [`pr-review-agent`](skills/pr-review-agent/SKILL.md) | Code review, regression, test and security findings / 程式碼、回歸、測試與安全審查 |
-| [`output-contract`](skills/output-contract/SKILL.md) | Consistent completion reports and handoffs / 一致的完成報告與交接 |
+| [preventive-repair](skills/preventive-repair/SKILL.md) | 修問題前先找出失效原因、影響範圍與復原方式，避免補一個洞又出現另一個 |
+| [portable-tool-delivery](skills/portable-tool-delivery/SKILL.md) | 要把腳本或工具交給另一台電腦、另一個作業系統或非工程使用者時 |
+| [workflow-automation-agent](skills/workflow-automation-agent/SKILL.md) | 把人工流程變成自動化，包含輸入檢查、重複事件、核准與失敗復原 |
+| [pr-review-agent](skills/pr-review-agent/SKILL.md) | 檢查 PR 的功能正確性、回歸風險、安全問題與測試缺口 |
+| [output-contract](skills/output-contract/SKILL.md) | 任務結束時需要留下實際修改、驗證結果與下一步，而不是只說「完成」 |
 
-## Quick start / 快速開始
+## 實際使用情境
 
-Copy one skill directory into the skills directory supported by your agent runtime. Keep the directory name unchanged and review the skill's trigger description before enabling it.
+例如要將「收到新版設備文件 → 比對版本 → 交由負責人審核」改成自動化：
 
-將任一技能資料夾複製到你的 Agent 執行環境支援的 skills 目錄。請保留資料夾名稱，並在啟用前先閱讀該技能的觸發條件。
+1. 用 `workflow-automation-agent` 列出事件來源、資料條件、核准節點與失敗處理。
+2. 實作完成後，讓 `pr-review-agent` 檢查修改是否破壞既有流程，並找出未測試的狀態。
+3. 交付時套用 `output-contract`，讓執行結果、測試與待辦留下清楚紀錄。
+
+Skills 提供的是可重用的操作規則；能否讀檔、執行程式或呼叫外部服務，仍取決於使用它的 Agent 平台與權限。
+
+## 如何使用
+
+挑選需要的 Skill，把整個資料夾複製到目標 Agent 平台支援的 Skills 位置，保留 `SKILL.md` 與附屬檔案。啟用前先閱讀每份 Skill 的適用條件。
 
 ```text
 skills/
-└── preventive-repair/
+├── preventive-repair/
+│   └── SKILL.md
+└── pr-review-agent/
     └── SKILL.md
 ```
 
-No secrets, personal settings, credentials, or machine-specific backups belong in this repository.
+## 驗證技能格式
 
-本倉庫不應放入秘密、個人設定、憑證或特定電腦的備份。
-
-## Validation / 驗證
-
-The repository includes a dependency-free PowerShell validator:
+倉庫附有 [PowerShell 檢查工具](scripts/validate.ps1)，可檢查 Skill 目錄、front matter、必要段落與常見敏感檔案模式。
 
 ```powershell
 pwsh -NoProfile -File .\scripts\validate.ps1
 ```
 
-它會檢查技能目錄名稱、`SKILL.md` front matter、必要標題，以及常見個人資料與秘密檔案模式。
+新增或修改 Skill 時，可以先執行檢查，再送交 PR 審查。完整貢獻方式見 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
-## Contributing / 參與貢獻
+## 安全與授權
 
-Please read [CONTRIBUTING.md](CONTRIBUTING.md). New skills should be self-contained, bilingual where practical, explicit about safety boundaries, and testable without private infrastructure.
+這些 Skills 不包含私人憑證或特定電腦的設定備份。如發現安全問題，請依 [SECURITY.md](SECURITY.md) 私下回報，不要將敏感資料放進 Issue。
 
-請先閱讀 [CONTRIBUTING.md](CONTRIBUTING.md)。新增技能應自包含、盡可能提供中英文說明、明確定義安全邊界，並能在不依賴私人基礎設施的情況下驗證。
-
-## Security / 安全性
-
-Please report suspected vulnerabilities privately according to [SECURITY.md](SECURITY.md). Never open an issue containing credentials, tokens, cookies, or private configuration.
-
-若發現疑似安全問題，請依 [SECURITY.md](SECURITY.md) 私下回報。不要在 Issue 放入憑證、Token、Cookie 或私人設定。
-
-## License / 授權
-
-MIT © 2026 a275618631
+授權：MIT，© 2026 a275618631。
