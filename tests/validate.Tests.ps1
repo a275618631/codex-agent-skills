@@ -161,3 +161,4 @@ finally {
 }
 
 if (-not $script:allOk) { exit 1 }
+exit 0
