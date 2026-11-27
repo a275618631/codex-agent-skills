@@ -39,6 +39,10 @@ Never paste secret values into review comments or logs. If evidence requires pri
 
 不得把秘密值貼到審查留言或紀錄。若證據涉及私人資料，應描述證據類型而不揭露內容，並要求安全的重現夾具。
 
+For high-risk changes or when independent review is requested, evaluate a fixed base/head/diff and raw test evidence independently; never allow author self-approval, never downgrade severity on author claims alone (adjust only with verified fix or counter-evidence), and ensure host/CI/ACL prevents the implementer from modifying the acceptance oracle and the read-only reviewer from modifying the reviewed workspace or HEAD.
+
+涉及高風險變更或要求獨立審查時，應以固定的 base/head/diff 與原始測試證據獨立審查；禁止作者自評、禁止僅因作者敘述而降低嚴重度（須有已驗證修復或反證才可調整），並由 host/CI/ACL 確保實作者不可改動驗收基準、唯讀審查者不可寫入被審查工作區或 HEAD（簡單任務不強迫第二代理）。
+
 ## Output contract / 輸出契約
 
 Return: findings ordered by severity, unanswered questions, tests run and not run, residual risks, and a merge recommendation with explicit confidence.
